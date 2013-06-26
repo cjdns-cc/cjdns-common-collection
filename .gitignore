@@ -4,3 +4,13 @@
 *.jar
 *.war
 *.ear
+
+#IDEA files
+target
+*.iws
+*.ipr
+*.iml
+.idea/*
+
+#other
+private.conf

@@ -1,0 +1,98 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0  http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>cjdns.cjdns-music</groupId>
+    <artifactId>cjdns-music-core</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>cjdns-music-core</name>
+
+    <parent>
+        <relativePath>../pom.xml</relativePath>
+        <groupId>cjdns.cjdns-music</groupId>
+        <artifactId>cjdns-music-parent</artifactId>
+        <version>0.0.1</version>
+    </parent>
+
+    <dependencies>
+        <!--LOGGING-->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>1.7.2</version>
+        </dependency>
+
+        <!--AKKA-->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_${akka-scala-library.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-remote_${akka-scala-library.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-slf4j_${akka-scala-library.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+
+        <!--SPRAY-->
+        <dependency>
+            <groupId>io.spray</groupId>
+            <artifactId>spray-client</artifactId>
+            <version>${spray.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.spray</groupId>
+            <artifactId>spray-can</artifactId>
+            <version>${spray.version}</version>
+        </dependency>
+
+        <!--LUCENE-->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-common</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+
+        <!--TOOLS-->
+        <dependency>
+            <groupId>org</groupId>
+            <artifactId>jaudiotagger</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.google.protobuf.tools</groupId>
+                <artifactId>maven-protoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
