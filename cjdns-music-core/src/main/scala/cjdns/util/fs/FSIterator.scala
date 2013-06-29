@@ -2,6 +2,7 @@ package cjdns.util.fs
 
 import java.io.File
 import annotation.tailrec
+import util.Random
 
 /**
  * User: willzyx
@@ -16,7 +17,7 @@ class FSIterator(root: File) extends Iterator[File] {
     else if (list.head.hasNext) {
       val file = list.head.next()
       if (file.isDirectory) {
-        list = file.listFiles.toIterator :: list
+        list = Random.shuffle(file.listFiles.toList).toIterator :: list
         getNext
       } else if (file.isFile) {
         file

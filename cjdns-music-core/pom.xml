@@ -45,16 +45,21 @@
             <version>${akka.version}</version>
         </dependency>
 
-        <!--SPRAY-->
+        <!--NETWORK-->
         <dependency>
-            <groupId>io.spray</groupId>
-            <artifactId>spray-client</artifactId>
-            <version>${spray.version}</version>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>3.2.9.Final</version>
         </dependency>
         <dependency>
-            <groupId>io.spray</groupId>
-            <artifactId>spray-can</artifactId>
-            <version>${spray.version}</version>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>9.0.4.v20130625</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpcomponents.version}</version>
         </dependency>
 
         <!--LUCENE-->

@@ -1,0 +1,72 @@
+package cjdns.cjdns_music;
+
+message Record {
+  required string id = 1;
+  optional string title = 2;
+  optional bytes hash = 3;
+
+  optional uint64 bit_rate = 4;
+  optional bool is_variable_bit_rate = 5 [default = false];
+  optional uint64 size = 6;
+  optional uint32 length = 7;
+
+  optional Album album = 11;
+
+  optional bool dirty = 21 [default = true];
+
+  optional string location_path = 51;
+  optional uint64 last_modified = 52;
+
+  optional double weight = 61 [default = 0];
+}
+
+message Album {
+  required string id = 1;
+  optional string title = 2;
+  optional uint32 year = 3;
+  repeated bytes poster_hash = 4;
+
+  optional Artist artist = 11;
+  repeated Record record = 12;
+
+  optional bool dirty = 21 [default = true];
+}
+
+message Artist {
+  required string id = 1;
+  optional string title = 2;
+
+  repeated Album album = 11;
+  optional bool approved = 21 [default = false];
+}
+
+//////////////
+// NETWORK
+//////////////
+
+message TransportPacket {
+  message Ping {}
+
+  message Pong {}
+
+  message IpTouch {
+    repeated string ip = 1;
+  }
+  message DirtyRecord {
+    required string ip = 1;
+    repeated Record record = 2;
+  }
+  message ApprovedRecord {
+    required string ip = 1;
+    repeated bytes hash = 2;
+  }
+
+  optional string message_id = 1;
+  optional string session_id = 2;
+
+  optional Ping ping = 6;
+  optional Pong pong = 7;
+  optional IpTouch ip_touch = 8;
+  optional DirtyRecord dirty_record = 9;
+  optional ApprovedRecord approved_record = 10;
+}
