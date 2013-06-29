@@ -7,7 +7,7 @@ import cjdns.cjdns_music.Model
  * User: willzyx
  * Date: 29.06.13 - 17:58
  */
-abstract class Connection(channel: Channel) {
+abstract class Connection(val channel: Channel) {
   def message(msg: Model.TransportPacket)
 
   def close()

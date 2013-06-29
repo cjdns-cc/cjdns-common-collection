@@ -41,7 +41,10 @@ class ServerInstance(port: Int, handler: Channel => Connection) {
             }
 
             override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
-
+              val msg = e.getMessage.asInstanceOf[Model.TransportPacket]
+              if (msg.hasPing) {
+                connection.channel.write(ServerInstance.PONG_PACKET)
+              }
               connection.message(e.getMessage.asInstanceOf[Model.TransportPacket])
             }
 
@@ -63,4 +66,11 @@ class ServerInstance(port: Int, handler: Channel => Connection) {
     channelFactory.releaseExternalResources()
   }
 
+}
+
+object ServerInstance {
+  val PONG_PACKET =
+    Model.TransportPacket.newBuilder.
+      setPong(Model.TransportPacket.Pong.getDefaultInstance).
+      build
 }

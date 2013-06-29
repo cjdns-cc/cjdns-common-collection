@@ -33,7 +33,7 @@ class ClientInstance(handler: Channel => Connection) {
       WORKERS_COUNT
     )
 
-  class WatchTask(val address: InetSocketAddress) extends TimerTask {
+  private class WatchTask(val address: InetSocketAddress) extends TimerTask {
     var channel: Channel = null
 
     def run() {
@@ -105,7 +105,7 @@ class ClientInstance(handler: Channel => Connection) {
   def add(address: InetSocketAddress) {
     val watcher = new WatchTask(address)
     watchers += watcher
-    watchTimer.schedule(watcher, 0, TIMEOUT.toMillis / 2)
+    watchTimer.schedule(watcher, 0, (TIMEOUT * 2 / 5).toMillis)
   }
 
   def getChannel = watchers.find(_.channel.isConnected).map(_.channel)
