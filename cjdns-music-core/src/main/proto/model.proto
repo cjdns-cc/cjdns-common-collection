@@ -1,14 +1,19 @@
 package cjdns.cjdns_music;
 
+///////////
+// MODEL //
+///////////
+
 message Record {
   required string id = 1;
   optional string title = 2;
   optional bytes hash = 3;
+  optional string ip = 4;
 
-  optional uint64 bit_rate = 4;
-  optional bool is_variable_bit_rate = 5 [default = false];
-  optional uint64 size = 6;
-  optional uint32 length = 7;
+  optional uint64 bit_rate = 6;
+  optional bool is_variable_bit_rate = 7 [default = false];
+  optional uint64 size = 8;
+  optional uint32 length = 9;
 
   optional Album album = 11;
 
@@ -41,6 +46,29 @@ message Artist {
 }
 
 //////////////
+//
+//////////////
+
+message Bloom {
+  required bytes bitset = 1;
+  repeated uint32 factor = 2;
+}
+
+message NodeStatistic {
+  required string ip = 1;
+
+}
+
+message FilterDirty {
+  optional Bloom bloom = 1;
+  optional uint32 free_slots = 2 [default = 0];
+}
+
+message FilterApproved {
+  optional bytes bloom_filter = 1;
+}
+
+//////////////
 // NETWORK
 //////////////
 
@@ -64,6 +92,7 @@ message TransportPacket {
   optional string message_id = 1;
   optional string session_id = 2;
 
+  optional bytes compressed_packet = 5;
   optional Ping ping = 6;
   optional Pong pong = 7;
   optional IpTouch ip_touch = 8;
