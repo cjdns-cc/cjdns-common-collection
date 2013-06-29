@@ -4,6 +4,11 @@ import java.util.{Comparator, PriorityQueue}
 import cjdns.cjdns_music.Model
 import scala.concurrent.duration._
 import scala.collection.JavaConversions._
+import cjdns.util.collection.BloomFilter
+import cjdns.util.number
+import util.Random
+import org.apache.commons.io.FileUtils
+import com.google.protobuf.ByteString
 
 /**
  * User: willzyx
@@ -22,40 +27,85 @@ class DirtyCollector {
   private var timestampScores: Long = DirtyCollector.MIN_SCORE_BOUND
 
   def touch(implicit NOW: Long = System.currentTimeMillis) {
-    this.timestampScores = getScore
-    this.timestamp = NOW
+    synchronized {
+      this.timestampScores = getScore
+      this.timestamp = NOW
+    }
   }
 
   def getScore(implicit NOW: Long = System.currentTimeMillis) = {
-    math.min({
-      val delta = NOW - timestamp
-      if (delta < 1.minute.toMillis) {
-        this.timestampScores + delta
-      } else {
-        this.timestampScores - delta * 4
-      }
-    }, 0)
+    synchronized {
+      math.min({
+        val delta = NOW - timestamp
+        if (delta < 1.minute.toMillis) {
+          this.timestampScores + delta
+        } else {
+          this.timestampScores - delta * 4
+        }
+      }, 0)
+    }
   }
 
-  def getOnline = getScore > 0
+  def isOnline = getScore > 0
 
   def setHeapCapacity(N: Int) {
-    this.heapCapacity = N
-    while (heap.size > N) {
-      heap.poll()
+    synchronized {
+      this.heapCapacity = N
+      while (heap.size > N) {
+        heap.poll()
+      }
     }
   }
 
-  def getHeapCapacity = heapCapacity
+  def getHeapCapacity = synchronized(heapCapacity)
 
-  def addRecord(record: Model.Record) {
-    heap.add(record)
-    while (heap.size > heapCapacity) {
-      heap.poll()
+  def getHeapSize = synchronized(heap.size)
+
+  def putRecord(record: Model.Record) {
+    synchronized {
+      heap.add(record)
+      while (heap.size > heapCapacity) {
+        heap.poll()
+      }
     }
   }
 
-  def getRecords = heap.toIterator
+  def putRecords(records: List[Model.Record]) {
+    synchronized {
+      records.foreach(heap.add)
+      while (heap.size > heapCapacity) {
+        heap.poll()
+      }
+    }
+  }
+
+  def getRecords = synchronized(heap.toList)
+
+  def getFilter = {
+    val builder = Model.FilterDirty.newBuilder
+    val bloom =
+      new BloomFilter[String](
+        number.primes.drop(Random.nextInt(64) + 16).take(2).toArray,
+        64 * FileUtils.ONE_KB * 8
+      ) {
+        protected def hash(obj: String) = obj.hashCode
+      }
+    synchronized {
+      heap.foreach(record => bloom.add(record.getHash.toStringUtf8))
+      builder.setFreeSlots(heapCapacity - heap.size)
+    }
+    builder.setBloom {
+      bloom.getVector.foldLeft(
+        Model.Bloom.newBuilder.
+          setBitset(ByteString.copyFrom(bloom.getByteArray))
+      )(_.addFactor(_))
+    }
+    builder.build
+  }
+
+  def purge() {
+
+  }
 
 }
 
