@@ -83,6 +83,11 @@ message TransportPacket {
   message IpTouch {
     repeated string ip = 1;
   }
+
+  message ApprovedHash {
+    required string ip = 1;
+    repeated bytes hash = 2;
+  }
   message DirtyData {
     required string ip = 1;
     repeated MusicRecord record = 21;
@@ -92,10 +97,6 @@ message TransportPacket {
     repeated MusicRecord record = 21;
     repeated MusicAlbum album = 22;
     repeated MusicArtist artist = 23;
-  }
-  message ApprovedHash {
-    required string ip = 1;
-    repeated bytes hash = 2;
   }
 
   optional string message_id = 1;
