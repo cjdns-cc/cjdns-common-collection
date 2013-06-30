@@ -21,11 +21,13 @@ object Mp3Read extends (File => Option[Model.MusicRecord]) {
     def unapply(s: String) = Option(s).map(_.trim).filterNot(_.isEmpty)
   }
 
+  def isSuspect(file: File) =
+    file.getName.endsWith(".mp3") && file.length <= MAX_FILE_SIZE
+
   def apply(file: File): Option[MusicRecord] = {
     for {
       file <- Option(file)
-      if file.getName.endsWith(".mp3")
-      if file.length <= MAX_FILE_SIZE
+      if isSuspect(file)
       audioFile <- Try(AudioFileIO.read(file)).toOption
       header = audioFile.getAudioHeader
       if header.getEncodingType == "mp3"
@@ -56,8 +58,6 @@ object Mp3Read extends (File => Option[Model.MusicRecord]) {
           setLength(header.getTrackLength).
           setSize(file.length).
           setHash(ByteString.copyFrom(SHA1.hash(file))).
-          setLocationPath(file.getAbsolutePath).
-          setLastModified(file.lastModified).
           build
       record
     }

@@ -20,9 +20,6 @@ message MusicRecord {
 
   optional bool dirty = 21 [default = true];
 
-  optional string location_path = 51;
-  optional uint64 last_modified = 52;
-
   optional double weight = 61 [default = 0];
 }
 
@@ -46,6 +43,15 @@ message MusicArtist {
 
   repeated MusicAlbum album = 12;
   optional bool approved = 21 [default = false];
+}
+
+//////////////
+
+message MusicRecordLocal {
+  required string filename = 1;
+  required uint64 last_modified = 2;
+  required uint64 length = 3;
+  optional MusicRecord music_record = 6;
 }
 
 //////////////
