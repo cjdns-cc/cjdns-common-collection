@@ -1,10 +1,10 @@
 package cjdns.cjdns_music;
 
 ///////////
-// MODEL //
+// MUSIC
 ///////////
 
-message Record {
+message MusicRecord {
   required string id = 1;
   optional string title = 2;
   optional bytes hash = 3;
@@ -15,7 +15,8 @@ message Record {
   optional uint64 size = 8;
   optional uint32 length = 9;
 
-  optional Album album = 11;
+  optional MusicAlbum album = 11;
+  optional MusicArtist artist = 12;
 
   optional bool dirty = 21 [default = true];
 
@@ -25,23 +26,25 @@ message Record {
   optional double weight = 61 [default = 0];
 }
 
-message Album {
+message MusicAlbum {
   required string id = 1;
   optional string title = 2;
   optional uint32 year = 3;
   repeated bytes poster_hash = 4;
 
-  optional Artist artist = 11;
-  repeated Record record = 12;
+  optional MusicArtist artist = 11;
+  repeated MusicRecord record = 12;
+
+  optional bool multi_artist_compilation = 16 [default = false];
 
   optional bool dirty = 21 [default = true];
 }
 
-message Artist {
+message MusicArtist {
   required string id = 1;
   optional string title = 2;
 
-  repeated Album album = 11;
+  repeated MusicAlbum album = 11;
   optional bool approved = 21 [default = false];
 }
 
@@ -80,11 +83,17 @@ message TransportPacket {
   message IpTouch {
     repeated string ip = 1;
   }
-  message DirtyRecord {
+  message DirtyData {
     required string ip = 1;
-    repeated Record record = 2;
+    repeated MusicRecord record = 21;
   }
-  message ApprovedRecord {
+  message PublishData {
+    required string ip = 1;
+    repeated MusicRecord record = 21;
+    repeated MusicAlbum album = 22;
+    repeated MusicArtist artist = 23;
+  }
+  message ApprovedHash {
     required string ip = 1;
     repeated bytes hash = 2;
   }
@@ -96,6 +105,9 @@ message TransportPacket {
   optional Ping ping = 6;
   optional Pong pong = 7;
   optional IpTouch ip_touch = 8;
-  optional DirtyRecord dirty_record = 9;
-  optional ApprovedRecord approved_record = 10;
+
+  optional ApprovedHash approved_hash = 11;
+  optional DirtyData dirty_data = 12;
+  optional PublishData publish_data = 13;
+
 }
