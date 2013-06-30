@@ -15,8 +15,8 @@ message MusicRecord {
   optional uint64 size = 8;
   optional uint32 length = 9;
 
-  optional MusicAlbum album = 11;
-  optional MusicArtist artist = 12;
+  optional MusicAlbum album = 12;
+  repeated MusicArtist artist = 13;
 
   optional bool dirty = 21 [default = true];
 
@@ -32,8 +32,8 @@ message MusicAlbum {
   optional uint32 year = 3;
   repeated bytes poster_hash = 4;
 
-  optional MusicArtist artist = 11;
-  repeated MusicRecord record = 12;
+  repeated MusicRecord record = 11;
+  repeated MusicArtist artist = 13;
 
   optional bool multi_artist_compilation = 16 [default = false];
 
@@ -44,7 +44,7 @@ message MusicArtist {
   required string id = 1;
   optional string title = 2;
 
-  repeated MusicAlbum album = 11;
+  repeated MusicAlbum album = 12;
   optional bool approved = 21 [default = false];
 }
 
