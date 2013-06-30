@@ -30,6 +30,8 @@ object SHA1 {
     md.digest
   }
 
+  def hash(s: String): Array[Byte] = hash(s.getBytes)
+
   def hashString(s: String): String =
     hashString(s.getBytes)
 
