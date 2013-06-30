@@ -9,7 +9,7 @@ import cjdns.util.concurrent.ReadWriteLockWrapper
  * User: willzyx
  * Date: 01.07.13 - 0:28
  */
-final class SyncHolder[T](value: T) {
+final class SyncRef[T](value: T) {
 
   class Item(val value: T) {
     val rwLock = new ReadWriteLockWrapper(new ReentrantReadWriteLock)

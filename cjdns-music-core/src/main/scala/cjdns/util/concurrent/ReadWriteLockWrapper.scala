@@ -1,6 +1,6 @@
 package cjdns.util.concurrent
 
-import java.util.concurrent.locks.ReadWriteLock
+import java.util.concurrent.locks.{ReentrantReadWriteLock, ReadWriteLock}
 
 /**
  * User: willzyx
@@ -39,4 +39,8 @@ class ReadWriteLockWrapper(rwLock: ReadWriteLock) {
     } else None
   }
 
+}
+
+object ReadWriteLockWrapper {
+  def allocate = new ReadWriteLockWrapper(new ReentrantReadWriteLock)
 }
