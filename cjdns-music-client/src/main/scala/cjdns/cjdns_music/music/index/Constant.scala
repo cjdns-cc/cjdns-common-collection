@@ -1,4 +1,4 @@
-package cjdns.cjdns_music.index.music
+package cjdns.cjdns_music.music.index
 
 /**
  * User: willzyx
@@ -14,4 +14,6 @@ object Constant {
   val TYPE = "t"
 
   val SUGGEST = "s"
+
+  val LOCAL_FILE = "l_file"
 }

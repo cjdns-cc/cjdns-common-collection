@@ -1,4 +1,4 @@
-package cjdns.cjdns_music.index.music
+package cjdns.cjdns_music.music.index
 
 import cjdns.cjdns_music.Model.{MusicArtist, MusicAlbum, MusicRecord}
 import org.apache.lucene.document.{TextField, StringField, Document}
@@ -38,6 +38,10 @@ object Tools {
         write(artist, record.getAlbum, record)
       }
     }
+  }
+
+  def removeRecord(record: MusicRecord)(implicit writer: IndexWriter, partition: String = null) {
+    writer.deleteDocuments(new Term(Constant.RECORD_ID, record.getId))
   }
 
   def writeArtist(artist: MusicArtist)(implicit writer: IndexWriter, partition: String = null) {

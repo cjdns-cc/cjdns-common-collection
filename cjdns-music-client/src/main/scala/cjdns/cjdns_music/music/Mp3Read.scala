@@ -22,7 +22,9 @@ object Mp3Read extends (File => Option[Model.MusicRecord]) {
   }
 
   def isSuspect(file: File) =
-    file.getName.endsWith(".mp3") && file.length <= MAX_FILE_SIZE
+    file.exists &&
+      file.getName.endsWith(".mp3") &&
+      file.length <= MAX_FILE_SIZE
 
   def apply(file: File): Option[MusicRecord] = {
     for {
@@ -56,7 +58,8 @@ object Mp3Read extends (File => Option[Model.MusicRecord]) {
           setBitRate(header.getBitRateAsNumber).
           setIsVariableBitRate(header.isVariableBitRate).
           setLength(header.getTrackLength).
-          setSize(file.length).
+          setFileSize(file.length).
+          setFilePath(file.getAbsolutePath).
           setHash(ByteString.copyFrom(SHA1.hash(file))).
           build
       record
