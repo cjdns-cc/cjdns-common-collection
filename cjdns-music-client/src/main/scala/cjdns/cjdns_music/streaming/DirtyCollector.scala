@@ -16,10 +16,10 @@ import com.google.protobuf.ByteString
  */
 class DirtyCollector {
   private var heapCapacity: Int = 128
-  private val heap = new PriorityQueue[Model.Record](
+  private val heap = new PriorityQueue[Model.MusicRecord](
     heapCapacity,
-    new Comparator[Model.Record] {
-      def compare(r1: Model.Record, r2: Model.Record) =
+    new Comparator[Model.MusicRecord] {
+      def compare(r1: Model.MusicRecord, r2: Model.MusicRecord) =
         if (r1.getWeight < r2.getWeight) -1 else 1
     }
   )
@@ -61,7 +61,7 @@ class DirtyCollector {
 
   def getHeapSize = synchronized(heap.size)
 
-  def putRecord(record: Model.Record) {
+  def putRecord(record: Model.MusicRecord) {
     synchronized {
       heap.add(record)
       while (heap.size > heapCapacity) {
@@ -70,7 +70,7 @@ class DirtyCollector {
     }
   }
 
-  def putRecords(records: List[Model.Record]) {
+  def putRecords(records: List[Model.MusicRecord]) {
     synchronized {
       records.foreach(heap.add)
       while (heap.size > heapCapacity) {
@@ -82,17 +82,17 @@ class DirtyCollector {
   def getRecords = synchronized(heap.toList)
 
   def getFilter = {
-    val builder = Model.FilterDirty.newBuilder
+    val builder = Model.TransportPacket.DirtyFilter.newBuilder
     val bloom =
       new BloomFilter[String](
         number.primes.drop(Random.nextInt(64) + 16).take(2).toArray,
-        64 * FileUtils.ONE_KB * 8
+        (64 * FileUtils.ONE_KB * 8).toInt
       ) {
         protected def hash(obj: String) = obj.hashCode
       }
     synchronized {
       heap.foreach(record => bloom.add(record.getHash.toStringUtf8))
-      builder.setFreeSlots(heapCapacity - heap.size)
+      builder.setMusicRecordSlots(heapCapacity)
     }
     builder.setBloom {
       bloom.getVector.foldLeft(

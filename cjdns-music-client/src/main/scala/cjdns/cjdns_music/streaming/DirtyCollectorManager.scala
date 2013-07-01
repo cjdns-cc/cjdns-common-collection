@@ -10,7 +10,7 @@ import collection.mutable.ListBuffer
  * User: willzyx
  * Date: 29.06.13 - 21:15
  */
-object DirtyStream {
+object DirtyCollectorManager {
   val TIMER_PERIOD = 30.seconds
   val OVERALL_SLOTS = 50000
 
@@ -50,15 +50,15 @@ object DirtyStream {
     getCollector(key).touch
   }
 
-  def put(key: String, record: Model.Record) {
+  def put(key: String, record: Model.MusicRecord) {
     getCollector(key).putRecord(record)
   }
 
-  def putAll(key: String, records: List[Model.Record]) {
+  def putAll(key: String, records: List[Model.MusicRecord]) {
     getCollector(key).putRecords(records)
   }
 
-  def getFilter(key: String): Model.FilterDirty = {
+  def getFilter(key: String): Model.TransportPacket.DirtyFilter = {
     getCollector(key).getFilter
   }
 

@@ -89,9 +89,9 @@ class ClientInstance(handler: Channel => Connection) {
             watcher.setChannel(future.getChannel)
           } else {
             if (getChannel.isDefined) {
-              log.warn(s"problem while connecting to \"$address\"")
+              log.warn("problem while connecting to \"%s\"" format address)
             } else {
-              log.error(s"problem while connecting to \"$address\"")
+              log.error("problem while connecting to \"%s\"" format address)
             }
           }
         }
