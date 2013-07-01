@@ -9,19 +9,24 @@ import scala.collection.JavaConversions._
  * Date: 01.07.13 - 19:40
  */
 class DisplacingPool[T](private var capacity: Int,
-                   comparator: Comparator[T]) {
+                        comparator: Comparator[T]) {
   private val LOCK = new Object
   private val tree = new util.TreeSet[T](comparator)
+
+  private def removeExceed() {
+    if (tree.size > capacity) {
+      tree.descendingIterator.toIterator.
+        take(tree.size - capacity).toList.
+        foreach(tree.remove)
+    }
+  }
 
   def getHeapCapacity: Int = LOCK.synchronized(capacity)
 
   def setHeapCapacity(size: Int) {
     LOCK.synchronized {
       this.capacity = size
-      if (tree.size > size) {
-        tree.toIterator.drop(size).toList.
-          foreach(tree.remove)
-      }
+      removeExceed()
     }
   }
 
@@ -32,5 +37,19 @@ class DisplacingPool[T](private var capacity: Int,
 
   def getTopItems(count: Int): List[T] =
     LOCK.synchronized(tree.toIterator.take(count).toList)
+
+  def addItem(item: T) {
+    LOCK.synchronized {
+      tree.add(item)
+      removeExceed()
+    }
+  }
+
+  def addItems(items: Iterable[T]) {
+    LOCK.synchronized {
+      tree.addAll(items)
+      removeExceed()
+    }
+  }
 
 }
