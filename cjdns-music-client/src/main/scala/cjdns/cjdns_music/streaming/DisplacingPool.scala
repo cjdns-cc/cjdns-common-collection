@@ -32,6 +32,8 @@ class DisplacingPool[T](private var capacity: Int,
 
   def getHeapSize: Int = LOCK.synchronized(tree.size)
 
+  def filled: Boolean = LOCK.synchronized(tree.size >= capacity)
+
   def getItems: List[T] =
     LOCK.synchronized(tree.toList)
 
