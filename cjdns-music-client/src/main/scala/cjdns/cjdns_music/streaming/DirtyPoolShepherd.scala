@@ -65,6 +65,8 @@ object DirtyPoolShepherd {
 
   def getScoringPool(key: String) = REMOTE_POOLS_LOCK.synchronized(REMOTE_POOLS.getOrElseUpdate(key, new ScoringPool))
 
+  def getScoringPools = REMOTE_POOLS_LOCK.synchronized(REMOTE_POOLS.valuesIterator.toList)
+
   def getPools = REMOTE_POOLS_LOCK.synchronized(REMOTE_POOLS.valuesIterator.map(_.heap).toList)
 
   private val timer = new Timer("dirty_stream_manager", true)
