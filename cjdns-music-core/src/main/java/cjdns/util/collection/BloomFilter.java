@@ -11,6 +11,8 @@ import java.util.BitSet;
  * Date: 29.06.13 - 23:54
  */
 public final class BloomFilter<T> {
+    public static final int MIN_SIZE = 64;
+
     public static interface Hash<T> {
         public long get(T obj);
     }
@@ -97,6 +99,24 @@ public final class BloomFilter<T> {
                 DEFAULT_HASH,
                 size
         );
+    }
+
+    public static int getVectorLength(int size, int count) {
+        return Math.max((int) Math.round(Math.log(2) * size / count), 1);
+    }
+
+    public static int getSize(int count, double probability) {
+        assert probability > 0;
+        assert probability < 1;
+        long a = Math.round((-count * Math.log(probability)) / Math.pow(Math.log(2), 2));
+        if (a >= MIN_SIZE) {
+            while ((a & (a - 1)) > 0) {
+                a = a & (a - 1);
+            }
+            return (int) (a << 1);
+        } else {
+            return MIN_SIZE;
+        }
     }
 
 }
