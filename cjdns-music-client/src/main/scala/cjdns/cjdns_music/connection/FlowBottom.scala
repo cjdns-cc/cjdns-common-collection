@@ -4,8 +4,9 @@ import cjdns.cjdns_music.Model.TransportPacket
 import java.net.InetSocketAddress
 import scala.concurrent.duration._
 import cjdns.cjdns_music.Model
-import cjdns.cjdns_music.streaming.DirtyCollectorManager
+import cjdns.cjdns_music.streaming.DirtyPoolShepherd
 import scala.collection.JavaConversions._
+import cjdns.util.collection.BloomFilterFactory
 
 /**
  * User: willzyx
@@ -25,21 +26,31 @@ object FlowBottom {
 
         def message(msg: TransportPacket) {
           val NOW = System.currentTimeMillis
+          val pool = DirtyPoolShepherd.getScoringPool(ip)
           watcher.touch()
+          pool.acceptScores()
+
           if (msg.hasPing) {
             if (nextDirtyFlush < NOW) {
               nextDirtyFlush = NOW + CHECK_DIRTY_PERIOD.toMillis
+              val items = pool.heap.getItems
+              val bloom = BloomFilterFactory.newDefault(items.size)
+              items.foreach(item => bloom.add(item.getId))
               channel.write(
-                Model.TransportPacket.newBuilder.
-                  setDirtyFilter(DirtyCollectorManager.getFilter(ip)).
-                  build
+                Model.TransportPacket.newBuilder.setDirtyFilter(
+                  Model.TransportPacket.DirtyFilter.newBuilder.
+                    setBloom(bloom.getMessage).
+                    setMusicRecordSlots(pool.heap.getHeapCapacity)
+                ).build
               )
             }
           }
+
           if (msg.hasDirtyData) {
-            msg.getDirtyData.getRecordList.
-              foreach(DirtyCollectorManager.put(ip, _))
+            pool.heap.
+              addItems(msg.getDirtyData.getMusicRecordList.toIterable)
           }
+
         }
 
         def close() {

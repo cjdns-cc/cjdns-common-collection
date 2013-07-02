@@ -65,7 +65,7 @@ object Mp3Scanner {
           }
         }
       },
-      0, 1.minute.toMillis
+      0, 5.minutes.toMillis
     )
     LoggerFactory.getLogger("initializer").info("local collection scanner")
   }

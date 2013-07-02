@@ -30,7 +30,7 @@ object DirtyPoolShepherd {
     )
 
   class ScoringPool {
-    val items =
+    val heap =
       new DisplacingPool[Model.MusicRecord](
         capacity = 100,
         comparator = RECORD_COMPARATOR
@@ -63,9 +63,9 @@ object DirtyPoolShepherd {
   private val REMOTE_POOLS_LOCK = new Object
   private val REMOTE_POOLS = mutable.LinkedHashMap.empty[String, ScoringPool]
 
-  def getScoringPool(key: String) = REMOTE_POOLS_LOCK.synchronized(REMOTE_POOLS.get(key))
+  def getScoringPool(key: String) = REMOTE_POOLS_LOCK.synchronized(REMOTE_POOLS.getOrElseUpdate(key, new ScoringPool))
 
-  def getPools = REMOTE_POOLS_LOCK.synchronized(REMOTE_POOLS.valuesIterator.map(_.items).toList)
+  def getPools = REMOTE_POOLS_LOCK.synchronized(REMOTE_POOLS.valuesIterator.map(_.heap).toList)
 
   private val timer = new Timer("dirty_stream_manager", true)
   timer.schedule(
@@ -90,16 +90,16 @@ object DirtyPoolShepherd {
       def run() {
         val pools = REMOTE_POOLS_LOCK.synchronized(REMOTE_POOLS.valuesIterator.toList).filter(_.getScore > 0)
         if (!pools.isEmpty) {
-          val used = pools.toIterator.map(_.items.getHeapSize).sum
+          val used = pools.toIterator.map(_.heap.getHeapSize).sum
           val overall = math.max(OVERALL_SLOTS - LOCAL_POOL.getHeapSize, 1)
-          if (pools.exists(_.items.filled) && used > 0) {
+          if (pools.exists(_.heap.filled) && used > 0) {
             this.k = this.k * overall / used
           }
           pools.foreach {
             case pool =>
-              pool.items.setHeapCapacity(
+              pool.heap.setHeapCapacity(
                 math.min(
-                  math.max(pool.items.getHeapSize * 2, 100),
+                  math.max(pool.heap.getHeapSize * 2, 100),
                   (pool.getScore * this.k).toInt
                 )
               )
