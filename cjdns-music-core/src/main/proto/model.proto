@@ -65,16 +65,6 @@ message Bloom {
   repeated uint32 factor = 2;
 }
 
-message NodeStatistic {
-  required string ip = 1;
-
-}
-
-message FilterDirty {
-  optional Bloom bloom = 1;
-  optional uint32 free_slots = 2 [default = 0];
-}
-
 message FilterApproved {
   optional bytes bloom_filter = 1;
 }
@@ -97,8 +87,11 @@ message TransportPacket {
     repeated bytes hash = 2;
   }
   message DirtyData {
-    required string ip = 1;
-    repeated MusicRecord record = 21;
+    repeated MusicRecord music_record = 21;
+  }
+  message DirtyFilter {
+    optional Bloom bloom = 1;
+    optional uint32 music_record_slots = 2 [default = 0];
   }
   message PublishData {
     required string ip = 1;
@@ -115,8 +108,9 @@ message TransportPacket {
   optional Pong pong = 7;
   optional IpTouch ip_touch = 8;
 
+  optional DirtyData dirty_data = 111;
+  optional DirtyFilter dirty_filter = 112;
   optional ApprovedHash approved_hash = 11;
-  optional DirtyData dirty_data = 12;
   optional PublishData publish_data = 13;
 
 }
