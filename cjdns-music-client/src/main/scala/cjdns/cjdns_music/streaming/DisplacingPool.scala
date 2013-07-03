@@ -7,16 +7,16 @@ import scala.collection.JavaConversions._
  * User: willzyx
  * Date: 01.07.13 - 19:40
  */
-class DisplacingPool[T](private var capacity: Int) {
+class DisplacingPool[T](private var capacity: Int, trigger: DisplacingPool.Trigger[T] = DisplacingPool.EMPTY_TRIGGER) {
   private val LOCK = new Object
   private val tree = new util.TreeSet[T]
 
-  private def removeExceed() {
+  private def pollExceed: Set[T] = {
     if (tree.size > capacity) {
       tree.descendingIterator.toIterator.
-        take(tree.size - capacity).toList.
-        foreach(tree.remove)
-    }
+        take(tree.size - capacity).toSet.
+        filter(tree.remove)
+    } else Set.empty
   }
 
   def getHeapCapacity: Int = LOCK.synchronized(capacity)
@@ -24,7 +24,7 @@ class DisplacingPool[T](private var capacity: Int) {
   def setHeapCapacity(size: Int) {
     LOCK.synchronized {
       this.capacity = size
-      removeExceed()
+      trigger.leave(pollExceed)
     }
   }
 
@@ -40,28 +40,67 @@ class DisplacingPool[T](private var capacity: Int) {
 
   def addItem(item: T) {
     LOCK.synchronized {
-      tree.add(item)
-      removeExceed()
+      if (tree.add(item)) {
+        val exceed = pollExceed
+        if (!exceed.contains(item)) {
+          trigger.enter(item)
+          trigger.leave(exceed)
+        }
+      }
     }
   }
 
   def addItems(items: Iterable[T]) {
     LOCK.synchronized {
-      tree.addAll(items)
-      removeExceed()
+      trigger.enter(items.filter(tree.add))
+      trigger.leave(pollExceed)
+    }
+  }
+
+  def removeItems(items: Iterable[T]) {
+    LOCK.synchronized {
+      trigger.leave(items.filter(tree.remove))
     }
   }
 
   def removeItem(item: T) {
     LOCK.synchronized {
-      tree.remove(item)
+      if (tree.remove(item)) {
+        trigger.leave(item)
+      }
     }
   }
 
   def purge() {
     LOCK.synchronized {
+      trigger.leave(tree)
       tree.clear()
     }
   }
+
+}
+
+object DisplacingPool {
+
+  trait Trigger[T] {
+    def enter(item: T)
+
+    def enter(items: Iterable[T])
+
+    def leave(item: T)
+
+    def leave(items: Iterable[T])
+  }
+
+  def EMPTY_TRIGGER[T] =
+    new Trigger[T] {
+      def enter(item: T) {}
+
+      def enter(items: Iterable[T]) {}
+
+      def leave(item: T) {}
+
+      def leave(items: Iterable[T]) {}
+    }
 
 }
