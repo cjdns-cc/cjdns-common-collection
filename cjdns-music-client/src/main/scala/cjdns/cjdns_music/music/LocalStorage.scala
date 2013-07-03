@@ -1,16 +1,15 @@
-package cjdns.cjdns_music.music.storage
+package cjdns.cjdns_music.music
 
 import cjdns.cjdns_music.{Model, Storage}
 import java.io.File
 import com.sleepycat.je.{DiskOrderedCursorConfig, OperationStatus, DatabaseEntry}
 import cjdns.util.SHA1
-import cjdns.cjdns_music.music.Mp3Read
 
 /**
  * User: willzyx
  * Date: 30.06.13 - 18:18
  */
-object LocalDB extends (File => Model.MusicRecordLocal) {
+object LocalStorage extends (File => Model.MusicRecordLocal) {
   val REF = Storage.database("local-cache-music")
 
   private def key(file: File) = new DatabaseEntry(SHA1.hash(file.getAbsolutePath))
@@ -29,6 +28,8 @@ object LocalDB extends (File => Model.MusicRecordLocal) {
         if (a1 && a2) Option(record) else Option.empty
       case OperationStatus.NOTFOUND =>
         Option.empty
+      case _ =>
+        throw new RuntimeException
     }
   }
 

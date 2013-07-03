@@ -9,6 +9,7 @@ import java.util.{TimerTask, Timer}
 import scala.concurrent.duration._
 import org.slf4j.LoggerFactory
 import org.apache.lucene.index.IndexWriter
+import cjdns.cjdns_music.AtomicItem.WMusicRecord
 
 /**
  * User: willzyx
@@ -17,13 +18,22 @@ import org.apache.lucene.index.IndexWriter
 object Mp3Scanner {
   val log = LoggerFactory.getLogger("local-scanner")
 
+  import DirtyPoolShepherd.LOCAL_POOL
+
+  private implicit val writer = DirtyIndex.DIRTY_WRITER
+
   def scan(file: File)(implicit writer: IndexWriter) {
-    new FSIterator(file).
-      filter(Mp3Read.isSuspect).
-      flatMap(storage.LocalDB.patch).
-      filter(_.hasMusicRecord).
-      map(_.getMusicRecord).
-      foreach(record => index.Tools.writeRecord(record))
+    def items =
+      new FSIterator(file).
+        filter(Mp3Read.isSuspect).
+        flatMap(LocalStorage.patch).
+        filter(_.hasMusicRecord).
+        map(_.getMusicRecord)
+    items.foreach {
+      case record =>
+        LOCAL_POOL.addItem(WMusicRecord(record))
+        index.Tools.writeRecord(record)
+    }
   }
 
   def scanAll(implicit writer: IndexWriter) {
@@ -35,12 +45,13 @@ object Mp3Scanner {
   }
 
   def reverseScan(implicit writer: IndexWriter) {
-    storage.LocalDB.readAll(
+    music.LocalStorage.readAll(
       record => {
         val file = new File(record.getFilename)
         if (!Mp3Read.isSuspect(file)) {
-          storage.LocalDB.delete(file)
+          music.LocalStorage.delete(file)
           if (record.hasMusicRecord) {
+            LOCAL_POOL.removeItem(WMusicRecord(record.getMusicRecord))
             index.Tools.removeRecord(record.getMusicRecord)
           }
         }
@@ -48,17 +59,21 @@ object Mp3Scanner {
     )
   }
 
+  LocalStorage.readAll(
+    record =>
+      if (record.hasMusicRecord) {
+        LOCAL_POOL.addItem(WMusicRecord(record.getMusicRecord))
+        index.Tools.removeRecord(record.getMusicRecord)
+      }
+  )
+
   def initialize() {
     new Timer("local-collection-scanner", true).schedule(
       new TimerTask {
         def run() {
           Try {
-            Index.LOCAL_COLLECTOR.write(
-              writer => {
-                scanAll(writer)
-                reverseScan(writer)
-              }
-            )
+            scanAll(writer)
+            reverseScan(writer)
           } recover {
             case e: Exception =>
               log.error("error while scanning", e)

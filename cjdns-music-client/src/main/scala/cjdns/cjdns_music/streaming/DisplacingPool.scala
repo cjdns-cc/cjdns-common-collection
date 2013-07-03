@@ -7,7 +7,8 @@ import scala.collection.JavaConversions._
  * User: willzyx
  * Date: 01.07.13 - 19:40
  */
-class DisplacingPool[T](private var capacity: Int, trigger: DisplacingPool.Trigger[T] = DisplacingPool.EMPTY_TRIGGER) {
+class DisplacingPool[T](private var capacity: Int,
+                        trigger: DisplacingPool.Trigger[T] = DisplacingPool.EMPTY_TRIGGER[T]) {
   private val LOCK = new Object
   private val tree = new util.TreeSet[T]
 
@@ -85,22 +86,22 @@ object DisplacingPool {
   trait Trigger[T] {
     def enter(item: T)
 
-    def enter(items: Iterable[T])
+    def enter(items: Iterable[T]) {
+      items.foreach(enter)
+    }
 
     def leave(item: T)
 
-    def leave(items: Iterable[T])
+    def leave(items: Iterable[T]) {
+      items.foreach(leave)
+    }
   }
 
   def EMPTY_TRIGGER[T] =
     new Trigger[T] {
       def enter(item: T) {}
 
-      def enter(items: Iterable[T]) {}
-
       def leave(item: T) {}
-
-      def leave(items: Iterable[T]) {}
     }
 
 }
