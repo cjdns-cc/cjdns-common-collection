@@ -26,4 +26,8 @@ object AtomicItem {
         obj.asInstanceOf[WMusicRecord].id == this.id
   }
 
+  object WMusicRecord {
+    def apply(base: Model.MusicRecord) = new WMusicRecord(base)
+  }
+
 }

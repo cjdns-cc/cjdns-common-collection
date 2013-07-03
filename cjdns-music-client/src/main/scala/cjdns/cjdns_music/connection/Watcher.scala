@@ -15,11 +15,11 @@ object Watcher {
   val timer = new Timer("connection_watcher", true)
 
   def watch(channel: Channel) = {
-    @volatile var expireAt = System.currentTimeMillis
+    @volatile var expireAt = System.currentTimeMillis + TIMEOUT.toMillis
     timer.schedule(
       new TimerTask {
         def run() {
-          if (channel.isConnected) {
+          if (!channel.isConnected) {
             this.cancel()
           } else if (expireAt < System.currentTimeMillis) {
             channel.close()

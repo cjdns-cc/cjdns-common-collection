@@ -9,6 +9,7 @@ import org.jaudiotagger.tag.FieldKey
 import cjdns.util.{number, SHA1}
 import com.google.protobuf.ByteString
 import org.apache.commons.io.FileUtils
+import scala.concurrent.duration._
 
 /**
  * User: willzyx
@@ -61,6 +62,7 @@ object Mp3Read extends (File => Option[Model.MusicRecord]) {
           setFileSize(file.length).
           setFilePath(file.getAbsolutePath).
           setHash(ByteString.copyFrom(SHA1.hash(file))).
+          setWeight(file.lastModified / 1.minute.toMillis).
           build
       record
     }

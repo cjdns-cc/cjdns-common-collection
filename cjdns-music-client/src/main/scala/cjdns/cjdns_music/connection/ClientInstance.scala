@@ -19,7 +19,7 @@ import util.Try
  * Date: 29.06.13 - 2:03
  */
 class ClientInstance(handler: Channel => Connection) {
-  val log = LoggerFactory.getLogger(getClass)
+  val log = LoggerFactory.getLogger("outgoing-connection")
 
   val WORKERS_COUNT = 2
 
@@ -77,7 +77,7 @@ class ClientInstance(handler: Channel => Connection) {
           }
 
           override def exceptionCaught(ctx: ChannelHandlerContext, e: ExceptionEvent) {
-            // do nothing
+            log.error("failure", e.getCause)
           }
         }
       )

@@ -1,17 +1,15 @@
 package cjdns.cjdns_music.streaming
 
 import java.util
-import util.Comparator
 import scala.collection.JavaConversions._
 
 /**
  * User: willzyx
  * Date: 01.07.13 - 19:40
  */
-class DisplacingPool[T](private var capacity: Int,
-                        comparator: Comparator[T]) {
+class DisplacingPool[T](private var capacity: Int) {
   private val LOCK = new Object
-  private val tree = new util.TreeSet[T](comparator)
+  private val tree = new util.TreeSet[T]
 
   private def removeExceed() {
     if (tree.size > capacity) {
@@ -51,6 +49,18 @@ class DisplacingPool[T](private var capacity: Int,
     LOCK.synchronized {
       tree.addAll(items)
       removeExceed()
+    }
+  }
+
+  def removeItem(item: T) {
+    LOCK.synchronized {
+      tree.remove(item)
+    }
+  }
+
+  def purge() {
+    LOCK.synchronized {
+      tree.clear()
     }
   }
 
