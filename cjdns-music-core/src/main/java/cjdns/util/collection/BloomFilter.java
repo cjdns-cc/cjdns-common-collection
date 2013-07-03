@@ -20,22 +20,38 @@ public final class BloomFilter<T> {
     private final Hash<T> hash;
     private final int[] vector;
     private final BitSet bitset;
+    private final int size;
     private final int mask;
 
     private BloomFilter(int[] vector, Hash<T> hash, byte[] bitset) {
         int size = bitset.length * 8;
-        assert ((size & (size - 1)) == 0);
+        if (size < MIN_SIZE) {
+            throw new IllegalArgumentException("bitset too short");
+        }
+        if ((size & (size - 1)) != 0) {
+            throw new IllegalArgumentException("illegal bitset size");
+        }
         this.hash = hash;
         this.vector = Arrays.copyOf(vector, vector.length);
         this.bitset = BitSet.valueOf(bitset);
+        this.size = size;
         this.mask = size - 1;
     }
 
     private BloomFilter(int[] vector, Hash<T> hash, int size) {
-        assert ((size & (size - 1)) == 0);
+        if (size < MIN_SIZE) {
+            size = MIN_SIZE;
+        }
+        if ((size & (size - 1)) != 0) {
+            size = size << 1;
+            while ((size & (size - 1)) != 0) {
+                size = size & (size - 1);
+            }
+        }
         this.hash = hash;
         this.vector = Arrays.copyOf(vector, vector.length);
         this.bitset = new BitSet(size);
+        this.size = size;
         this.mask = size - 1;
     }
 
@@ -67,7 +83,14 @@ public final class BloomFilter<T> {
         for (int k : vector) {
             builder.addFactor(k);
         }
-        builder.setBitset(ByteString.copyFrom(bitset.toByteArray()));
+        builder.setBitset(
+                ByteString.copyFrom(
+                        Arrays.copyOf(
+                                bitset.toByteArray(),
+                                size >> 3
+                        )
+                )
+        );
         return builder.build();
     }
 
@@ -106,8 +129,9 @@ public final class BloomFilter<T> {
     }
 
     public static int getSize(int count, double probability) {
-        assert probability > 0;
-        assert probability < 1;
+        if (probability <= 0 || probability >= 1) {
+            throw new IllegalArgumentException("probability out of range");
+        }
         long a = Math.round((-count * Math.log(probability)) / Math.pow(Math.log(2), 2));
         if (a >= MIN_SIZE) {
             while ((a & (a - 1)) > 0) {
