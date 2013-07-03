@@ -5,7 +5,7 @@ package cjdns.cjdns_music.music.index
  * Date: 30.06.13 - 16:18
  */
 object Constant {
-  val PARTITION = "p"
+  val UNIQUE_ID = "id"
 
   val HASH = "hash"
   val RECORD_ID = "r_id"

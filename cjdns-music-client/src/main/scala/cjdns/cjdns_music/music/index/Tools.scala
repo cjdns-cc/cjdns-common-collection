@@ -12,10 +12,19 @@ import scala.collection.JavaConversions._
  * Date: 30.06.13 - 16:14
  */
 object Tools {
+  private def getUniqueId(record: MusicRecord)(implicit partition: String) = {
+    if (partition == null)
+      record.getId
+    else
+      partition + "_" + record.getId
+  }
+
   private def write(artist: MusicArtist,
                     album: MusicAlbum,
                     record: MusicRecord)(implicit writer: IndexWriter, partition: String) {
+    val id = getUniqueId(record)
     val document = new Document
+    document.add(new StringField(Constant.UNIQUE_ID, id, Store.NO))
     document.add(new StringField(Constant.HASH, new String(Hex.encodeHex(record.getHash.toByteArray)), Store.YES))
     document.add(new StringField(Constant.RECORD_ID, record.getId, Store.YES))
     document.add(new StringField(Constant.ALBUM_ID, album.getId, Store.YES))
@@ -23,10 +32,7 @@ object Tools {
     document.add(new TextField(Constant.SUGGEST, record.getTitle, Store.NO))
     document.add(new TextField(Constant.SUGGEST, album.getTitle, Store.NO))
     document.add(new TextField(Constant.SUGGEST, artist.getTitle, Store.NO))
-    if (partition != null) {
-      document.add(new StringField(Constant.PARTITION, partition, Store.NO))
-    }
-    writer.updateDocument(new Term(Constant.RECORD_ID, record.getId), document)
+    writer.updateDocument(new Term(Constant.UNIQUE_ID, id), document)
   }
 
   def writeRecord(record: MusicRecord)(implicit writer: IndexWriter, partition: String = null) {
@@ -41,7 +47,7 @@ object Tools {
   }
 
   def removeRecord(record: MusicRecord)(implicit writer: IndexWriter, partition: String = null) {
-    writer.deleteDocuments(new Term(Constant.RECORD_ID, record.getId))
+    writer.deleteDocuments(new Term(Constant.UNIQUE_ID, getUniqueId(record)))
   }
 
   def writeArtist(artist: MusicArtist)(implicit writer: IndexWriter, partition: String = null) {

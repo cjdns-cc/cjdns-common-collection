@@ -1,13 +1,11 @@
 package cjdns.cjdns_music.music
 
-import index.Tools
 import org.apache.lucene.index.{IndexReader, MultiReader}
 import org.apache.lucene.search.IndexSearcher
 import cjdns.util.collection.SyncRef
 import cjdns.cjdns_music.index.Collector
 import java.io.{IOException, File}
 import org.apache.lucene.store.NIOFSDirectory
-import cjdns.cjdns_music.music.storage.LocalDB
 
 /**
  * User: willzyx
@@ -47,15 +45,5 @@ object Index {
       }
     }
   }
-
-  LOCAL_COLLECTOR.write(
-    writer => {
-      LocalDB.readAll(
-        record =>
-          if (record.hasMusicRecord)
-            Tools.writeRecord(record.getMusicRecord)(writer)
-      )
-    }
-  )
 
 }
