@@ -1,6 +1,6 @@
 package cjdns
 
-import java.net.NetworkInterface
+import java.net.{Inet6Address, NetworkInterface}
 import scala.collection.JavaConversions._
 
 /**
@@ -8,6 +8,9 @@ import scala.collection.JavaConversions._
  * Date: 04.07.13 - 23:55
  */
 object Network {
-  val LOCAL_ADDRESS =
-    NetworkInterface.getByName("tun0").getInetAddresses.toList.head
+  val LOCAL_ADDRESS: Inet6Address = {
+    NetworkInterface.getByName("tun0").getInetAddresses.toList collect {
+      case address: Inet6Address => address
+    }
+  }.head
 }
