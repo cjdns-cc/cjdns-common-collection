@@ -17,4 +17,11 @@ class ServerContext {
 
   val queries = mutable.LinkedHashMap.empty[(I, Long), Query]
 
+  def getBucketFullness(l: Int) =
+    connections.valuesIterator.
+      filter(_.getQuality > 0).
+      count(_.distance == l)
+
+  val storage = new Storage
+
 }
