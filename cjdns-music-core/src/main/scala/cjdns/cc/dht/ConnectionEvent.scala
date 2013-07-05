@@ -10,12 +10,18 @@ trait ConnectionEvent extends Comparable[ConnectionEvent] {
   def timestamp: Long
 
   def compareTo(event: ConnectionEvent): Int = if (timestamp < event.timestamp) -1 else 1
+
+  def failure: Boolean
 }
 
 object ConnectionEvent {
 
-  case class PingPong(timestamp: Long, latency: FiniteDuration) extends ConnectionEvent
+  case class Reply(timestamp: Long, latency: FiniteDuration) extends ConnectionEvent {
+    def failure = false
+  }
 
-  case class Timeout(timestamp: Long) extends ConnectionEvent
+  case class Timeout(timestamp: Long) extends ConnectionEvent {
+    def failure = true
+  }
 
 }

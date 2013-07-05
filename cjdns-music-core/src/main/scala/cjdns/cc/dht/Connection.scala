@@ -8,6 +8,8 @@ import cjdns.cc.DHT
 import org.slf4j.LoggerFactory
 import collection.mutable
 import concurrent._
+import java.util
+import scala.collection.JavaConversions._
 
 /**
  * User: willzyx
@@ -23,7 +25,7 @@ class Connection(socket: DatagramSocket, val address: I) {
   private val queries = mutable.LinkedHashMap.empty[Long, Query]
 
   private val EVENTS_LOCK = new Object
-  private val events = mutable.TreeSet.empty[ConnectionEvent]
+  private val events = new util.TreeSet[ConnectionEvent]
 
   private val pingTask =
     new TimerTask {
@@ -44,12 +46,9 @@ class Connection(socket: DatagramSocket, val address: I) {
           lostQueries.toIterator.
             map(_.timestamp).
             map(ConnectionEvent.Timeout.apply).
-            foreach(events += _)
+            foreach(events add _)
           val LOW_THRESHOLD = NOW - Connection.HISTORY_EXPIRE.toMillis
-          events.toIterator.
-            takeWhile(_.timestamp < LOW_THRESHOLD).
-            toList.
-            foreach(events -= _)
+          events.retain(_.timestamp < LOW_THRESHOLD)
         }
 
         send(
@@ -89,6 +88,32 @@ class Connection(socket: DatagramSocket, val address: I) {
     ).foreach {
       case query =>
         query.promise success packet
+        EVENTS_LOCK.synchronized(
+          events.add(
+            ConnectionEvent.Reply(
+              timestamp = query.timestamp,
+              latency = (System.currentTimeMillis - query.timestamp).millis
+            )
+          )
+        )
+    }
+  }
+
+  def getQuality: Double = {
+    EVENTS_LOCK.synchronized {
+      val FAILURE_THRESHOLD = 5
+      if (events.descendingIterator.toIterator.take(FAILURE_THRESHOLD).count(_.failure) > FAILURE_THRESHOLD) {
+        -1D
+      } else {
+        val times = {
+          events.toIterator collect {
+            case event: ConnectionEvent.Reply =>
+              event.latency.toMillis
+          }
+        }.toList
+        if (times.isEmpty) 0D
+        else times.size.toDouble / times.sum
+      }
     }
   }
 
