@@ -24,6 +24,8 @@ class TaskPacketReceived(i: I, packet: DHT.Packet)(implicit server: Server, cont
       for {
         partitionKey <- msg.getPartitionKeyList
         i <- Try(I.fromProto(partitionKey))
+        if i != LOCAL_I
+        if !(context.connections contains i)
         if context.getBucketFullness(i ? LOCAL_I) < K
       } {
         server.submit(
