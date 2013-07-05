@@ -1,0 +1,39 @@
+package cjdns.cc;
+
+message Host {
+  required bytes ip = 1;
+}
+
+////
+
+message FindNode {
+  required bytes primary_key = 1;
+}
+
+message FindValue {
+  required bytes primary_key = 1;
+  required bytes secondary_key = 2;
+}
+
+message Store {
+  required bytes primary_key = 1;
+  required bytes secondary_key = 2;
+  required bytes value = 3;
+}
+
+message Response {
+  repeated Host host = 1;
+  repeated bytes value = 2;
+}
+
+////
+
+message Packet {
+  optional uint64 rnd = 1;
+
+  optional FindNode find_node = 6;
+  optional FindValue find_value = 7;
+  optional Store store = 8;
+
+  optional Response response = 11;
+}
