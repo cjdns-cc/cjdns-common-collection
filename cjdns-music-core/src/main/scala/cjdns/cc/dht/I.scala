@@ -58,4 +58,12 @@ object I {
       throw new IllegalArgumentException
 
   def apply(address: Inet6Address): I = I(address.getAddress)
+
+  def fromProto(buffer: ByteString): I = I(buffer.toByteArray)
+
+  def fromAddress(address: InetAddress) =
+    address match {
+      case v: Inet6Address => apply(v)
+      case _ => throw new IllegalArgumentException
+    }
 }
