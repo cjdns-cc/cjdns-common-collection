@@ -11,7 +11,7 @@ public class BitSetTest {
     @Test
     public void testSimple() throws Exception {
         final int K = 13;
-        BitSet bits = new BitSet(997);
+        BitSet bits = new BitSet(997 << 6);
         for (int i = 0; i < bits.length; i++) {
             if (i % K == 0) {
                 bits.set(i);

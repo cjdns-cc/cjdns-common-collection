@@ -7,17 +7,45 @@ import java.util.Arrays;
  * Date: 06.07.13 - 22:54
  */
 public final class BitSet {
+    private final int wordCount;
     public final int length;
     private final long[] words;
 
     public BitSet(int length) {
+        if ((length & 0x3F) != 0) {
+            throw new IllegalArgumentException();
+        }
+        this.wordCount = length >> 6;
         this.length = length;
-        this.words = new long[((length - 1) >> 6) + 1];
+        this.words = new long[this.wordCount];
     }
 
-    private BitSet(int length, long[] words) {
-        this.length = length;
+    private BitSet(long[] words) {
+        this.wordCount = words.length;
+        this.length = this.wordCount << 6;
         this.words = words;
+    }
+
+    @Override
+    public int hashCode() {
+        long k = 0;
+        for (int i = 0; i < wordCount; i++) {
+            k = k * 37 + words[i];
+        }
+        return (int) (k ^ (k >> 32));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (this == obj) return true;
+        if (!(obj instanceof BitSet)) return false;
+        BitSet bitset = (BitSet) obj;
+        if (wordCount != bitset.wordCount) return false;
+        for (int i = 0; i < wordCount; i++) {
+            if (words[i] != bitset.words[i]) return false;
+        }
+        return true;
     }
 
     public void set(int i) {
@@ -28,8 +56,19 @@ public final class BitSet {
         return (words[i >> 6] & (1L << i)) != 0;
     }
 
+    /* */
+
+    public BitSet xor(BitSet bitset) {
+        for (int i = 0; (i < bitset.wordCount) && (i < wordCount); i++) {
+            words[i] ^= bitset.words[i];
+        }
+        return this;
+    }
+
+    /* */
+
     public byte[] toByteArray() {
-        byte[] buffer = new byte[((length - 1) >> 3) + 1];
+        byte[] buffer = new byte[wordCount << 3];
         for (int i = 0; i < buffer.length; i++) {
             buffer[i] = (byte) (words[i >> 3] >>> ((i & 7) << 3));
         }
@@ -44,25 +83,14 @@ public final class BitSet {
 
     public static BitSet valueOf(byte[] buffer, int length) {
         BitSet bits = new BitSet(length);
-        int i = ((length - 1) >> 3) + 1;
-        long k = 0;
-        do {
-            i--;
-            k <<= 8;
-            k |= buffer[i] & 0xffL;
-            if ((i & 7) == 0) {
-                bits.words[i >> 3] = k;
-            }
-        } while (i != 0);
+        for (int i = 0; i < bits.wordCount << 3; i++) {
+            bits.words[i >> 3] |= (buffer[i] & 0xFFL) << ((i & 7) << 3);
+        }
         return bits;
     }
 
     public static BitSet valueOf(BitSet bitset) {
-        return valueOf(bitset, bitset.length);
-    }
-
-    public static BitSet valueOf(BitSet bitset, int length) {
-        return new BitSet(length, Arrays.copyOf(bitset.words, ((length - 1) >> 6) + 1));
+        return new BitSet(Arrays.copyOf(bitset.words, bitset.words.length));
     }
 
 }

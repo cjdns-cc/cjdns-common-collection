@@ -4,7 +4,6 @@ import cjdns.cjdns_music.Model.Bloom;
 import com.google.protobuf.ByteString;
 
 import java.util.Arrays;
-import java.util.BitSet;
 
 /**
  * User: willzyx
