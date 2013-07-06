@@ -82,7 +82,9 @@ class Server(val port: Int = PORT) {
                     case address: Inet6Address =>
                       val i = I(address)
                       log.debug("received UDP packet from {}\n{}", i, packet)
-                      worker.execute(new TaskPacketReceived(i, packet))
+                      if (i != LOCAL_I) {
+                        worker.execute(new TaskPacketReceived(i, packet))
+                      }
                   }
               }
             case Failure(e) =>

@@ -22,15 +22,13 @@ class I(private val bitset: BitSet) extends Comparable[I] {
 
   /* */
 
-  def ^(i: I): I = new I(BitSet.valueOf(bitset).xor(i.bitset))
-
-  private def length: Int =
-    Iterator.range(0, I.BITS_COUNT).
-      map(bitset.get).
-      takeWhile(!_).
-      size
-
-  def ?(i: I): Int = (this ^ i).length
+  def ?(i: I): Int = {
+    I.BITS_COUNT - {
+      Iterator.range(0, I.BITS_COUNT).
+        takeWhile(j => !(bitset.get(j) ^ i.bitset.get(j))).
+        size
+    }
+  }
 
   override def hashCode = bitset.hashCode()
 
