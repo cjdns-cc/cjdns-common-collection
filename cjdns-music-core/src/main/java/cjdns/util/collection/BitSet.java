@@ -6,16 +6,11 @@ package cjdns.util.collection;
  */
 public final class BitSet {
     public final int length;
-    public final long[] words;
+    private final long[] words;
 
     public BitSet(int length) {
         this.length = length;
         this.words = new long[((length - 1) >> 6) + 1];
-    }
-
-    public BitSet(long[] words, int length) {
-        this.words = words;
-        this.length = length;
     }
 
     public void set(int i) {
