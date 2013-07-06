@@ -1,14 +1,11 @@
 package cjdns.cc.dht
 
 import concurrent._
-import scala.concurrent.duration._
 import collection.mutable
 import cjdns.cc.DHT
 import java.util.concurrent.Executors
 import scala.collection.JavaConversions._
 import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
 
 /**
  * User: willzyx
@@ -37,57 +34,59 @@ class Engine(server: Server) {
           setPartitionKey(target.toProto)
       ).build
 
-    val answer = promise[List[I]]()
-
     val queue = mutable.TreeSet.empty[I]
     val processing = mutable.HashSet.empty[I]
     val successPer = mutable.TreeSet[I](LOCAL_I)
-    val failurePer = mutable.HashSet.empty[I]
 
-    def process(i: I) {
-      queue -= i
+    def pollFirst: Option[I] = {
+      if (!queue.isEmpty)
+        Option(queue.firstKey)
+      else
+        Option.empty
+    }.filter(queue.remove)
+
+    def process(i: I): Future[I] = {
       processing += i
-      server.ask(i, query).onComplete(pf(i))
-    }
-
-    /* */
-
-    def pf(i: I): Try[DHT.Packet] => Unit = {
-      reply => {
-        reply match {
-          case Success(packet) if packet.hasResponse =>
-            successPer += i
-            for {
-              key <- packet.getResponse.getPartitionKeyList
-              i <- Try(I.fromProto(key))
-              if !processing.contains(i)
-            } {
-              queue.add(i)
-            }
-          case Success(packet) =>
-            failurePer += i
-          case Failure(e) =>
-            failurePer += i
-        }
-        process(queue.firstKey)
+      server.ask(i, query) collect {
+        case packet if packet.hasResponse =>
+          successPer += i
+          for {
+            key <- packet.getResponse.getPartitionKeyList
+            i <- Try(I.fromProto(key))
+            if !processing.contains(i)
+          } {
+            queue.add(i)
+          }
+      } recover {
+        case e => Unit
+      } map {
+        case _ => pollFirst
+      } collect {
+        case Some(v) => v
+      } flatMap {
+        case ii => process(ii)
       }
     }
 
-    Await.result(server.getConnections, 1.second).foreach(queue += _)
-    future {
-      queue.toIterator.
-        take(CONCURRENCY).
-        foreach(process)
-    }
-
-    answer.future
+    /* */
+    server.getConnections.flatMap(
+      list => {
+        list.foreach(queue += _)
+        List.fill(CONCURRENCY)(pollFirst).
+          filter(_.isDefined).
+          map(_.get).
+          map(i => process(i)).
+          foldLeft(Future.successful[Any](Unit))(_ zip _).
+          map(_ => successPer.toIterator.take(K).toList)
+      }
+    )
   }
 }
 
 object Engine {
   implicit val executor: ExecutionContextExecutor = {
     ExecutionContext.fromExecutor(
-      Executors.newSingleThreadExecutor()
+      Executors.newSingleThreadExecutor
     )
   }
 }
