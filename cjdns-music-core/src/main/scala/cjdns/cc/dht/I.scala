@@ -1,15 +1,16 @@
 package cjdns.cc.dht
 
 import java.net.{InetAddress, Inet6Address, InetSocketAddress}
-import java.util
 import org.apache.commons.codec.binary.Hex
 import com.google.protobuf.ByteString
+import cjdns.util.collection.BitSet
+import java.util
 
 /**
  * User: willzyx
  * Date: 05.07.13 - 0:28
  */
-class I(private val bitset: util.BitSet) extends Comparable[I] {
+class I(private val bitset: BitSet) extends Comparable[I] {
 
   def toAddress =
     new InetSocketAddress(
@@ -21,12 +22,7 @@ class I(private val bitset: util.BitSet) extends Comparable[I] {
 
   /* */
 
-  def ^(i: I): I = {
-    val buffer = new util.BitSet(I.BITS_COUNT)
-    buffer.or(bitset)
-    buffer.xor(i.bitset)
-    new I(buffer)
-  }
+  def ^(i: I): I = new I(BitSet.valueOf(bitset).xor(i.bitset))
 
   private def length: Int =
     Iterator.range(0, I.BITS_COUNT).
@@ -63,7 +59,7 @@ object I {
 
   def apply(bytes: Array[Byte]): I =
     if (bytes.length == SIZE)
-      new I(util.BitSet.valueOf(bytes))
+      new I(BitSet.valueOf(bytes))
     else
       throw new IllegalArgumentException
 

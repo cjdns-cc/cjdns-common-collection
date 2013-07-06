@@ -76,8 +76,10 @@ class TaskPacketReceived(i: I, packet: DHT.Packet)(implicit server: Server, cont
 
     /* */
     context.getBucketFullness(i ? LOCAL_I) < K
-    context.connections.getOrElseUpdate(i, new Connection(i))
-    server.scheduleTick(i, 1.minute)
+    context.connections.getOrElseUpdate(i, {
+      server.scheduleTick(i, 1.minute)
+      new Connection(i)
+    })
   }
 
 }

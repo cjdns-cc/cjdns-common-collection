@@ -3,6 +3,7 @@ package cjdns.cc.dht
 import collection.mutable
 import concurrent.Promise
 import cjdns.cc.DHT
+import util.Random
 
 /**
  * User: willzyx
@@ -15,7 +16,7 @@ class ServerContext {
   /* */
 
   class Query(val promise: Promise[DHT.Packet],
-              val rnd: Long = System.currentTimeMillis,
+              val rnd: Long = Random.nextLong(),
               val timestamp: Long = System.currentTimeMillis)
 
   val queries = mutable.LinkedHashMap.empty[(I, Long), Query]

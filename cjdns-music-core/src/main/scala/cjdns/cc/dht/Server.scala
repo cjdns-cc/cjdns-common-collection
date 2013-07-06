@@ -9,22 +9,25 @@ import cjdns.cc.DHT
 import java.io.ByteArrayInputStream
 import concurrent.duration._
 import concurrent.{Promise, Future}
+import org.slf4j.LoggerFactory
 
 /**
  * User: willzyx
  * Date: 05.07.13 - 20:11
  */
-class Server(val port: Int) {
+class Server(val port: Int = PORT) {
+  val log = LoggerFactory.getLogger("dht.server")
+
   implicit val server = Server.this
   implicit val context = new ServerContext
 
-  private val socket = new DatagramSocket
-  socket.bind(new InetSocketAddress(Network.LOCAL_ADDRESS, port))
+  private val socket = new DatagramSocket(new InetSocketAddress(Network.LOCAL_ADDRESS, port))
 
   private val timer = new Timer("dht-timer", false)
   private val worker = Executors.newSingleThreadExecutor
 
   def submit(i: I, packet: DHT.Packet) {
+    log.debug("submit UDP packet to {}\n{}", i, packet)
     val buffer = packet.toByteArray
     socket.send(
       new DatagramPacket(
@@ -32,6 +35,16 @@ class Server(val port: Int) {
         buffer.length,
         i.toAddress
       )
+    )
+  }
+
+  def lookup(i: I) {
+    submit(
+      i,
+      DHT.Packet.newBuilder.setFind(
+        DHT.Find.newBuilder.
+          setPartitionKey(LOCAL_I.toProto)
+      ).build
     )
   }
 
@@ -67,11 +80,13 @@ class Server(val port: Int) {
                 case packet =>
                   Option(datagram.getAddress) collect {
                     case address: Inet6Address =>
-                      worker.execute(new TaskPacketReceived(I(address), packet))
+                      val i = I(address)
+                      log.debug("received UDP packet from {}\n{}", i, packet)
+                      worker.execute(new TaskPacketReceived(i, packet))
                   }
               }
             case Failure(e) =>
-
+              log.error("exception", e)
           }
         }
       }
