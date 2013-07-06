@@ -7,7 +7,8 @@ import java.util.concurrent.Executors
 import util.{Random, Try, Success, Failure}
 import cjdns.cc.DHT
 import java.io.ByteArrayInputStream
-import concurrent.duration.FiniteDuration
+import concurrent.duration._
+import concurrent.{Promise, Future}
 
 /**
  * User: willzyx
@@ -21,7 +22,7 @@ class Server(val port: Int) {
   socket.bind(new InetSocketAddress(Network.LOCAL_ADDRESS, port))
 
   private val timer = new Timer("dht-timer", false)
-  private val worker = Executors.newFixedThreadPool(1)
+  private val worker = Executors.newSingleThreadExecutor
 
   def submit(i: I, packet: DHT.Packet) {
     val buffer = packet.toByteArray
@@ -32,6 +33,18 @@ class Server(val port: Int) {
         i.toAddress
       )
     )
+  }
+
+  def ask(i: I, packet: DHT.Packet): Future[DHT.Packet] = {
+    val promise = Promise[DHT.Packet]()
+    worker.execute(new TaskAsk(i = i, packet = packet, promise = promise))
+    promise.future
+  }
+
+  def getConnections: Future[List[I]] = {
+    val promise = Promise[List[I]]()
+    worker.execute(new TaskGetConnections(promise))
+    promise.future
   }
 
   private val thread =
@@ -83,6 +96,21 @@ class Server(val port: Int) {
       period.toMillis
     )
   }
+
+  private def scheduleAction(action: => Runnable, period: FiniteDuration) {
+    timer.schedule(
+      new TimerTask {
+        def run() {
+          worker.execute(action)
+        }
+      },
+      Random.nextInt(period.toMillis.toInt),
+      period.toMillis
+    )
+  }
+
+  scheduleAction(new TaskTimeoutSetter, 1.second)
+  scheduleAction(new TaskCleaner, 1.minute)
 
   def stop() {
     thread.interrupt()

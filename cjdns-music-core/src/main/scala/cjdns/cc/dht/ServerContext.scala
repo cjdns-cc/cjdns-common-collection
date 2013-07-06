@@ -14,16 +14,25 @@ class ServerContext {
 
   /* */
 
-  class Query(val rnd: Long = System.currentTimeMillis,
-              val promise: Promise[DHT.Packet] = Promise[DHT.Packet](),
+  class Query(val promise: Promise[DHT.Packet],
+              val rnd: Long = System.currentTimeMillis,
               val timestamp: Long = System.currentTimeMillis)
 
   val queries = mutable.LinkedHashMap.empty[(I, Long), Query]
 
-  def ask(i: I, packet: DHT.Packet)(implicit server: Server) {
-    val query = new Query()
+  def ask(i: I,
+          packet: DHT.Packet,
+          promise: Promise[DHT.Packet])(implicit server: Server) {
+    val query = new Query(promise = promise)
     queries.put((i, query.rnd), query)
     server.submit(i, packet.toBuilder.setRnd(query.rnd).build)
+  }
+
+  def ask(i: I, packet: DHT.Packet)(implicit server: Server) = {
+    val query = new Query(promise = Promise[DHT.Packet]())
+    queries.put((i, query.rnd), query)
+    server.submit(i, packet.toBuilder.setRnd(query.rnd).build)
+    query.promise.future
   }
 
   /* */

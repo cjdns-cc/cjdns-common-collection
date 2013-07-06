@@ -9,7 +9,7 @@ import com.google.protobuf.ByteString
  * User: willzyx
  * Date: 05.07.13 - 0:28
  */
-class I(private val bitset: util.BitSet) {
+class I(private val bitset: util.BitSet) extends Comparable[I] {
 
   def toAddress =
     new InetSocketAddress(
@@ -45,6 +45,16 @@ class I(private val bitset: util.BitSet) {
 
   override def toString =
     new String(Hex.encodeHex(util.Arrays.copyOf(bitset.toByteArray, I.SIZE)))
+
+  def compareTo(i: I): Int = {
+    Iterator.range(0, I.BITS_COUNT).map(j => {
+      val a1 = bitset.get(j)
+      val a2 = i.bitset.get(j)
+      if (a1 ^ a2) {
+        if (a2) 1 else -1
+      } else 0
+    }).find(_ != 0).getOrElse(0)
+  }
 }
 
 object I {

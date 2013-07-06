@@ -1,6 +1,7 @@
 package cjdns.cc
 
 import cjdns.Network
+import scala.concurrent.duration._
 
 /**
  * User: willzyx
@@ -12,5 +13,6 @@ package object dht {
   val K = 20
 
   val LOCAL_I = I(Network.LOCAL_ADDRESS)
+  val REQUEST_TIMEOUT = 10.seconds
 
 }
