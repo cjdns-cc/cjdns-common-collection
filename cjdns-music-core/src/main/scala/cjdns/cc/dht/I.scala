@@ -5,6 +5,7 @@ import org.apache.commons.codec.binary.Hex
 import com.google.protobuf.ByteString
 import cjdns.util.collection.BitSet
 import java.util
+import cjdns.util.Permutation
 
 /**
  * User: willzyx
@@ -14,7 +15,9 @@ class I(private val bitset: BitSet) extends Comparable[I] {
 
   def toAddress =
     new InetSocketAddress(
-      InetAddress.getByAddress(bitset.toByteArray),
+      InetAddress.getByAddress(
+        I.IP_SHUFFLE.reverseTransform(bitset.toByteArray)
+      ),
       PORT
     )
 
@@ -54,6 +57,11 @@ class I(private val bitset: BitSet) extends Comparable[I] {
 object I {
   val SIZE = 16
   val BITS_COUNT = SIZE * 8
+  val IP_SHUFFLE =
+    new Permutation(
+      14, 8, 11, 15, 13, 9, 10, 12,
+      6, 3, 4, 2, 0, 7, 5, 1
+    )
 
   def apply(bytes: Array[Byte]): I =
     if (bytes.length == SIZE)
@@ -61,7 +69,8 @@ object I {
     else
       throw new IllegalArgumentException
 
-  def apply(address: Inet6Address): I = I(address.getAddress)
+  def apply(address: Inet6Address): I =
+    I(IP_SHUFFLE.transform(address.getAddress))
 
   def fromProto(buffer: ByteString): I = I(buffer.toByteArray)
 

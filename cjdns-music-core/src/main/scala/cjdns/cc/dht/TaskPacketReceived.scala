@@ -11,6 +11,10 @@ import scala.concurrent.duration._
  */
 class TaskPacketReceived(i: I, packet: DHT.Packet)(implicit server: Server, context: ServerContext) extends Runnable {
 
+  def send(packet: DHT.Packet) {
+    server.submit(i, packet)
+  }
+
   def run() {
     val NOW = System.currentTimeMillis
     val RND = packet.getRnd
@@ -64,8 +68,7 @@ class TaskPacketReceived(i: I, packet: DHT.Packet)(implicit server: Server, cont
           key = I.fromProto(msg.getPartitionKey)
         ).foreach(i => builder.addValue(i.toProto))
       }
-      server.submit(
-        i,
+      send(
         DHT.Packet.newBuilder.
           setRnd(RND).
           setResponse(builder).

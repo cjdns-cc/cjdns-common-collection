@@ -27,13 +27,14 @@ class Server(val port: Int = PORT) {
   private val worker = Executors.newSingleThreadExecutor
 
   def submit(i: I, packet: DHT.Packet) {
-    log.debug("submit UDP packet to {}\n{}", i, packet)
+    val address = i.toAddress
+    log.debug("submit UDP packet to {}\n{}", address.getAddress, packet)
     val buffer = packet.toByteArray
     socket.send(
       new DatagramPacket(
         buffer,
         buffer.length,
-        i.toAddress
+        address
       )
     )
   }
@@ -81,7 +82,7 @@ class Server(val port: Int = PORT) {
                   Option(datagram.getAddress) collect {
                     case address: Inet6Address =>
                       val i = I(address)
-                      log.debug("received UDP packet from {}\n{}", i, packet)
+                      log.debug("received UDP packet from {}\n{}", address, packet)
                       if (i != LOCAL_I) {
                         worker.execute(new TaskPacketReceived(i, packet))
                       }

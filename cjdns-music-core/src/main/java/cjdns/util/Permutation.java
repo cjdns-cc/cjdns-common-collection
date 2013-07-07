@@ -8,7 +8,7 @@ public final class Permutation {
     public final int size;
     private final int[] a;
 
-    public Permutation(int[] a) {
+    public Permutation(int... a) {
         this.size = a.length;
         this.a = a;
     }
@@ -23,12 +23,8 @@ public final class Permutation {
         return k;
     }
 
-    public int minCycle() {
-        int min = size;
-        for (int i = 1; i < size; i++) {
-            min = Math.min(min, cycle(i));
-        }
-        return min;
+    public boolean isSingleCycle() {
+        return cycle(0) == size;
     }
 
     public byte[] transform(byte[] buffer) {
@@ -47,34 +43,6 @@ public final class Permutation {
         return out;
     }
 
-    /* */
-
-    public Permutation shuffle(int k) {
-        int b[] = new int[size];
-        for (int i = 0; i < size; i++) {
-            b[i] = (a[i] + 1) * k % size;
-        }
-        return new Permutation(b);
-    }
-
-    public Permutation shift(int k) {
-        int b[] = new int[size];
-        for (int i = 0; i < size; i++) {
-            int x = a[i] + k;
-            if (x < 0) x = size - x;
-            b[i] = x % size;
-        }
-        return new Permutation(b);
-    }
-
-    public Permutation roll() {
-        int b[] = new int[size];
-        for (int i = 0; i < size; i++) b[i] = a[a[i]];
-        return new Permutation(b);
-    }
-
-    /* */
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -91,11 +59,4 @@ public final class Permutation {
         return sb.toString();
     }
 
-    /* */
-
-    public static Permutation identity(int size) {
-        int[] a = new int[size];
-        for (int i = 0; i < size; i++) a[i] = i;
-        return new Permutation(a);
-    }
 }
