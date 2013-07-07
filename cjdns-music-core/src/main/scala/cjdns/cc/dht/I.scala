@@ -1,6 +1,6 @@
 package cjdns.cc.dht
 
-import java.net.{InetAddress, Inet6Address, InetSocketAddress}
+import java.net.{InetAddress, Inet6Address}
 import org.apache.commons.codec.binary.Hex
 import com.google.protobuf.ByteString
 import cjdns.util.collection.BitSet
@@ -14,11 +14,8 @@ import cjdns.util.Permutation
 class I(private val bitset: BitSet) extends Comparable[I] {
 
   def toAddress =
-    new InetSocketAddress(
-      InetAddress.getByAddress(
-        I.IP_SHUFFLE.reverseTransform(bitset.toByteArray)
-      ),
-      PORT
+    InetAddress.getByAddress(
+      I.IP_SHUFFLE.reverseTransform(bitset.toByteArray)
     )
 
   def toProto = ByteString.copyFrom(bitset.toByteArray)

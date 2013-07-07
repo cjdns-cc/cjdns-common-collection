@@ -28,13 +28,13 @@ class Server(val port: Int = PORT) {
 
   def submit(i: I, packet: DHT.Packet) {
     val address = i.toAddress
-    log.debug("submit UDP packet to {}\n{}", address.getAddress, packet)
+    log.debug("submit UDP packet to {}\n{}", address, packet)
     val buffer = packet.toByteArray
     socket.send(
       new DatagramPacket(
         buffer,
         buffer.length,
-        address
+        new InetSocketAddress(address, port)
       )
     )
   }
